@@ -9,12 +9,16 @@ from cryptography.hazmat.primitives import serialization
 
 from ipaddress import IPv4Address
 
+import configparser
 
-country="US"
-state="CA"
-city="San Diego"
-organization="Example Limited"
-common_name="example.com"
+config = configparser.RawConfigParser()
+config.read('config.ini')
+
+country=config.get('DEFAULT','country');
+state=config.get('DEFAULT','state');
+city=config.get('DEFAULT','city');
+organization=config.get('DEFAULT','organization');
+common_name=config.get('DEFAULT','common_name');
 
 subject = []
 
@@ -29,17 +33,31 @@ elif tmp_country != ".":
     subject.append(x509.NameAttribute(NameOID.COUNTRY_NAME, tmp_country))
 
 tmp_state=input("State: [" + state +"]: ")
-if not tmp_country:
+if not tmp_state:
     subject.append(x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, state))
-elif tmp_country != ".":
+elif tmp_state != ".":
     subject.append(x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, tmp_state))
 
-subject.append(x509.NameAttribute(NameOID.LOCALITY_NAME, city))
-subject.append(x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization))
-subject.append(x509.NameAttribute(NameOID.COMMON_NAME, common_name))
+tmp_city=input("City: [" + city +"]: ")
+if not tmp_city:
+  subject.append(x509.NameAttribute(NameOID.LOCALITY_NAME, city))
+elif tmp_city != ".":
+  subject.append(x509.NameAttribute(NameOID.LOCALITY_NAME, tmp_city))
+
+tmp_organization=input("Organization: [" + organization +"]: ")
+if not tmp_organization:
+  subject.append(x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization))
+elif tmp_organization != ".":
+  subject.append(x509.NameAttribute(NameOID.ORGANIZATION_NAME, tmp_organization))
+
+tmp_common_name=input("Common Name: [" + common_name +"]: ")
+if not tmp_common_name:
+  subject.append(x509.NameAttribute(NameOID.COMMON_NAME, common_name))
+elif tmp_common_name != ".":
+  subject.append(x509.NameAttribute(NameOID.COMMON_NAME, tmp_common_name))
+
 
 key = rsa.generate_private_key(public_exponent=65537,key_size=4096,backend=default_backend());
-
 
 csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name(subject)).add_extension(
     x509.SubjectAlternativeName([
