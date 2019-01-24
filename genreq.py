@@ -43,7 +43,7 @@ organization=config.get('DEFAULT','organization');
 common_name=config.get('DEFAULT','common_name');
 
 subject = []
-alt_names = []
+alt_names = set()
 
 print("Now create certificate signing request. Please enter the following details")
 print("Leaving it empty confirms the default values")
@@ -73,12 +73,16 @@ if not tmp_organization:
 elif tmp_organization != ".":
   subject.append(x509.NameAttribute(NameOID.ORGANIZATION_NAME, tmp_organization))
 
+cn = ""
 tmp_common_name=input("Common Name: [" + common_name +"]: ")
 if not tmp_common_name:
   subject.append(x509.NameAttribute(NameOID.COMMON_NAME, common_name))
+  cn = common_name
 elif tmp_common_name != ".":
   subject.append(x509.NameAttribute(NameOID.COMMON_NAME, tmp_common_name))
+  cn = tmp_common_name
 
+alt_names.add(cn)
 print("\nEnter Alternative names")
 print("Leaving it empty continues")
 while True:
@@ -86,8 +90,7 @@ while True:
   if not name:
     break;
   else:
-    alt_names.append(name)
-
+    alt_names.add(name)
 
 key = rsa.generate_private_key(public_exponent=65537,key_size=4096,backend=default_backend());
 
@@ -98,6 +101,13 @@ csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name(subject)).a
 # Sign the CSR with our private key.
 ).sign(key, hashes.SHA256(), default_backend())
 
-with open("request.csr", "wb") as f:
+with open(cn + ".key", "wb") as f:
+    f.write(key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.BestAvailableEncryption(b"passphrase"),
+    ))
+
+with open(cn + ".csr", "wb") as f:
     f.write(csr.public_bytes(serialization.Encoding.PEM))
 
