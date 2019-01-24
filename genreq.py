@@ -8,8 +8,30 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 
 from ipaddress import IPv4Address
+from ipaddress import IPv6Address
+from ipaddress import AddressValueError
 
 import configparser
+
+def gen_alt_name(list):
+  alt_name_objs = []
+  for name in list:
+    try:
+      addr = IPv4Address(name)
+      alt_name_objs.append(x509.IPAddress(addr))
+      continue
+    except AddressValueError:
+      pass
+
+    try:
+      addr = IPv6Address(name)
+      alt_name_objs.append(x509.IPAddress(addr))
+      continue
+    except AddressValueError:
+      pass
+
+    alt_name_objs.append(x509.DNSName(name))
+  return x509.SubjectAlternativeName(alt_name_objs)
 
 config = configparser.RawConfigParser()
 config.read('config.ini')
@@ -21,6 +43,7 @@ organization=config.get('DEFAULT','organization');
 common_name=config.get('DEFAULT','common_name');
 
 subject = []
+alt_names = []
 
 print("Now create certificate signing request. Please enter the following details")
 print("Leaving it empty confirms the default values")
@@ -56,17 +79,19 @@ if not tmp_common_name:
 elif tmp_common_name != ".":
   subject.append(x509.NameAttribute(NameOID.COMMON_NAME, tmp_common_name))
 
+print("\nEnter Alternative names")
+print("Leaving it empty continues")
+while True:
+  name = input("Alternatvie name: ")
+  if not name:
+    break;
+  else:
+    alt_names.append(name)
+
 
 key = rsa.generate_private_key(public_exponent=65537,key_size=4096,backend=default_backend());
 
-csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name(subject)).add_extension(
-    x509.SubjectAlternativeName([
-        # Describe what sites we want this certificate for.
-        x509.IPAddress(IPv4Address("136.243.232.117")),
-        x509.DNSName(u"vgr.morloc.de"),
-        x509.DNSName(u"mail.jnhmn.de"),
-        x509.DNSName(u"jnhmn.de"),
-    ]),
+csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name(subject)).add_extension(gen_alt_name(alt_names),
     critical=False,
 ).add_extension(
     x509.KeyUsage(content_commitment=True,digital_signature=True,key_encipherment=True,data_encipherment=False,key_agreement=True,key_cert_sign=False,crl_sign=False,decipher_only=False, encipher_only=False),critical=False
