@@ -1,0 +1,6 @@
+[DEFAULT]
+country=US
+state=CA
+city=San Diego
+organization=Example Limited
+common_name=example.com
