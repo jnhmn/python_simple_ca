@@ -13,7 +13,6 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 
-
 def load_csr(path):
   f = open(path,"rb")
   plaincsr = f.read()
@@ -36,6 +35,15 @@ def load_csr(path):
   builder = builder.public_key(pubkey)
   return builder
 
+def print_csr(builder):
+  sn = builder._subject_name
+  print("Subject: "+sn.rfc4514_string())
+  extensions = builder._extensions
+  for ext in extensions:
+    print(ext._value)
+    print(type(ext._value))
+    print("Critical: "+str(ext._critical))
+
 def gen_serial():
   try:
     serial_list = set(line.strip() for line in open('serials.txt'))
@@ -52,27 +60,36 @@ valid_before = datetime.datetime.utcnow() - datetime.timedelta(0, 100, 0)
 valid_after = datetime.datetime.utcnow() + 365*one_day
 
 builder = load_csr("jnhmn.de.csr")
-print(builder)
-builder = builder.not_valid_before(valid_before).not_valid_after(valid_after)
-builder = builder.serial_number(serial)
+print_csr(builder)
 
+print("\n")
+contd = input("Continue (N/y)")
+if (contd != 'y'):
+  exit(1)
+
+
+# Load CA public key
 fhdl_ca_pub = open("ca.crt","rb")
 ca_pub = x509.load_pem_x509_certificate(fhdl_ca_pub.read(),default_backend())
 fhdl_ca_pub.close()
-builder = builder.issuer_name(ca_pub.subject)
-builder = builder.add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
-builder = builder.add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_pub.public_key()), critical=False)
-
+# Load CA private key
 fhdl_ca_priv = open("ca.key","rb")
 passwd = getpass.getpass("Please enter password: ")
 ca_priv = serialization.load_pem_private_key(fhdl_ca_priv.read(),bytes(passwd, 'utf-8'),default_backend())
 fhdl_ca_priv.close()
 
+builder = builder.not_valid_before(valid_before).not_valid_after(valid_after)
+builder = builder.serial_number(serial)
+builder = builder.issuer_name(ca_pub.subject)
+builder = builder.add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+builder = builder.add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_pub.public_key()), critical=False)
+
 certificate = builder.sign(ca_priv,hashes.SHA256(),default_backend())
-print("\n")
-print(certificate)
+
+# Update serial list
 with open("serials.txt", "a") as f:
   f.write(str(serial)+"\n")
 
+# Write signed certificate to file
 with open("jnhmn.crt", "wb") as f:
     f.write(certificate.public_bytes(serialization.Encoding.PEM))
