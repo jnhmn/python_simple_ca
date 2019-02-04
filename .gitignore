@@ -1,3 +1,5 @@
 *.csr
 *.key
+*.crt
 config.ini
+serials.txt
