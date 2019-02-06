@@ -3,6 +3,7 @@
 import sys
 import datetime
 import csv
+import argparse
 
 import getpass
 
@@ -65,51 +66,67 @@ def gen_serial():
     serial = x509.random_serial_number()
   return serial
 
-serial = gen_serial()
-one_day = datetime.timedelta(1, 0, 0)
-valid_before = datetime.datetime.utcnow() - datetime.timedelta(0, 100, 0)
-valid_after = datetime.datetime.utcnow() + 365*one_day
+def main(arg_data):
+  serial = gen_serial()
+  one_day = datetime.timedelta(1, 0, 0)
+  valid_before = datetime.datetime.utcnow() - datetime.timedelta(0, 100, 0)
+  valid_after = datetime.datetime.utcnow() + 365*one_day
 
-[subject, builder] = load_csr("jnhmn.de.csr")
-print_csr(builder)
+  [subject, builder] = load_csr(arg_data.csr[0])
+  print_csr(builder)
 
-print("\n")
-contd = input("Continue (N/y)")
-if (contd != 'y'):
-  exit(1)
+  print("\n")
+  contd = input("Continue (N/y)")
+  if (contd != 'y'):
+    sys.exit(1)
 
 
-# Load CA public key
-fhdl_ca_pub = open("ca.crt","rb")
-ca_pub = x509.load_pem_x509_certificate(fhdl_ca_pub.read(),default_backend())
-fhdl_ca_pub.close()
-# Load CA private key
-fhdl_ca_priv = open("ca.key","rb")
-passwd = getpass.getpass("Please enter password: ")
-ca_priv = serialization.load_pem_private_key(fhdl_ca_priv.read(),bytes(passwd, 'utf-8'),default_backend())
-fhdl_ca_priv.close()
+  # Load CA public key
+  fhdl_ca_pub = open("ca.crt","rb")
+  ca_pub = x509.load_pem_x509_certificate(fhdl_ca_pub.read(),default_backend())
+  fhdl_ca_pub.close()
+  # Load CA private key
+  fhdl_ca_priv = open("ca.key","rb")
+  passwd = getpass.getpass("Please enter password: ")
+  ca_priv = serialization.load_pem_private_key(fhdl_ca_priv.read(),bytes(passwd, 'utf-8'),default_backend())
+  fhdl_ca_priv.close()
 
-builder = builder.not_valid_before(valid_before).not_valid_after(valid_after)
-builder = builder.serial_number(serial)
-builder = builder.issuer_name(ca_pub.subject)
-builder = builder.add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
-builder = builder.add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_pub.public_key()), critical=False)
+  builder = builder.not_valid_before(valid_before).not_valid_after(valid_after)
+  builder = builder.serial_number(serial)
+  builder = builder.issuer_name(ca_pub.subject)
+  builder = builder.add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+  builder = builder.add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_pub.public_key()), critical=False)
 
-certificate = builder.sign(ca_priv,hashes.SHA256(),default_backend())
+  certificate = builder.sign(ca_priv,hashes.SHA256(),default_backend())
 
-# Update serial list
-with open("serials.txt", "a") as f:
-  f.write(str(serial)+"\n")
+  # Update serial list
+  with open("serials.txt", "a") as f:
+    f.write(str(serial)+"\n")
 
-hex_serial =  '{:x}'.format(serial)
-with open("certs.csv","a") as csvfile:
-  out = ':'.join(hex_serial[i:i+2] for i in range(0, len(hex_serial), 2))
-  writer = csv.writer(csvfile,dialect='unix')
-  writer.writerow([out,valid_before.isoformat(),valid_after.isoformat(),subject.rfc4514_string()])
-  csvfile.close()
+  hex_serial =  '{:x}'.format(serial)
+  with open("certs.csv","a") as csvfile:
+    out = ':'.join(hex_serial[i:i+2] for i in range(0, len(hex_serial), 2))
+    writer = csv.writer(csvfile,dialect='unix')
+    writer.writerow([out,valid_before.isoformat(),valid_after.isoformat(),subject.rfc4514_string()])
+    csvfile.close()
 
-# Write signed certificate to file
-filename = "certs/" + hex_serial + ".crt"
-with open(filename, "wb") as f:
-  f.write(certificate.public_bytes(serialization.Encoding.PEM))
-print(filename)
+  # Write signed certificate to file
+  filename = "certs/" + hex_serial + ".crt"
+  with open(filename, "wb") as f:
+    f.write(certificate.public_bytes(serialization.Encoding.PEM))
+  print(filename)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(prog='issuecert')
+    #parser.add_argument('--group', '-g', action='append', default=[])
+    #parser.add_argument('--nomail', action='store_true')
+    #parser.add_argument('--noposix', action='store_true')
+    parser.add_argument('csr', metavar='signing request', type=str, nargs=1, help='signing request')
+    arg_data = parser.parse_args()
+    print(arg_data)
+    try:
+        main(arg_data)
+    except KeyboardInterrupt:
+        print("\nAborted by user!")
+        sys.exit()
