@@ -25,16 +25,26 @@ def load_csr(path):
   if not csr.is_signature_valid:
     sys.exit(1)
   subject = csr.subject
-  ext_san = csr.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
-  ext_keyuse = csr.extensions.get_extension_for_class(x509.KeyUsage).value
-  ext_extdkeyuse = csr.extensions.get_extension_for_class(x509.ExtendedKeyUsage).value
   pubkey = csr.public_key()
 
   builder = x509.CertificateBuilder()
   builder = builder.subject_name(subject)
-  builder = builder.add_extension(ext_san, critical=False)
-  builder = builder.add_extension(ext_keyuse, critical=False)
-  builder = builder.add_extension(ext_extdkeyuse, critical=False)
+
+  try:
+    ext_san = csr.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
+    builder = builder.add_extension(ext_san, critical=False)
+  except: pass
+
+  try:
+    ext_keyuse = csr.extensions.get_extension_for_class(x509.KeyUsage).value
+    builder = builder.add_extension(ext_keyuse, critical=False)
+  except: pass
+
+  try:
+    ext_extdkeyuse = csr.extensions.get_extension_for_class(x509.ExtendedKeyUsage).value
+    builder = builder.add_extension(ext_extdkeyuse, critical=False)
+  except: pass
+
   builder = builder.add_extension(x509.SubjectKeyIdentifier.from_public_key(pubkey),critical=False)
   builder = builder.public_key(pubkey)
   return [subject, builder]
