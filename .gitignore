@@ -3,4 +3,5 @@
 *.crt
 config.ini
 serials.txt
+certs.csv
 __pycache__
