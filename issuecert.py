@@ -5,6 +5,8 @@ import datetime
 
 import getpass
 
+from ext_print import *
+
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes
@@ -35,14 +37,23 @@ def load_csr(path):
   builder = builder.public_key(pubkey)
   return builder
 
+printspecial = {
+  x509.OID_SUBJECT_ALTERNATIVE_NAME: print_san,
+  x509.OID_KEY_USAGE: print_kuse,
+  x509.OID_EXTENDED_KEY_USAGE: print_extkuse,
+  x509.OID_SUBJECT_KEY_IDENTIFIER: print_skeyid,
+  'foo': lambda ext: print(ext.value)
+}
+
 def print_csr(builder):
   sn = builder._subject_name
   print("Subject: "+sn.rfc4514_string())
+  print()
   extensions = builder._extensions
   for ext in extensions:
-    print(ext._value)
-    print(type(ext._value))
-    print("Critical: "+str(ext._critical))
+    print(ext.oid._name + "\tCritical: "+str(ext._critical))
+    printspecial.get(ext.oid,print)(ext)
+    print()
 
 def gen_serial():
   try:
