@@ -2,6 +2,7 @@
 
 import sys
 import datetime
+import csv
 
 import getpass
 
@@ -35,14 +36,13 @@ def load_csr(path):
   builder = builder.add_extension(ext_extdkeyuse, critical=False)
   builder = builder.add_extension(x509.SubjectKeyIdentifier.from_public_key(pubkey),critical=False)
   builder = builder.public_key(pubkey)
-  return builder
+  return [subject, builder]
 
 printspecial = {
   x509.OID_SUBJECT_ALTERNATIVE_NAME: print_san,
   x509.OID_KEY_USAGE: print_kuse,
   x509.OID_EXTENDED_KEY_USAGE: print_extkuse,
-  x509.OID_SUBJECT_KEY_IDENTIFIER: print_skeyid,
-  'foo': lambda ext: print(ext.value)
+  x509.OID_SUBJECT_KEY_IDENTIFIER: print_skeyid
 }
 
 def print_csr(builder):
@@ -70,7 +70,7 @@ one_day = datetime.timedelta(1, 0, 0)
 valid_before = datetime.datetime.utcnow() - datetime.timedelta(0, 100, 0)
 valid_after = datetime.datetime.utcnow() + 365*one_day
 
-builder = load_csr("jnhmn.de.csr")
+[subject, builder] = load_csr("jnhmn.de.csr")
 print_csr(builder)
 
 print("\n")
@@ -101,6 +101,15 @@ certificate = builder.sign(ca_priv,hashes.SHA256(),default_backend())
 with open("serials.txt", "a") as f:
   f.write(str(serial)+"\n")
 
+hex_serial =  '{:x}'.format(serial)
+with open("certs.csv","a") as csvfile:
+  out = ':'.join(hex_serial[i:i+2] for i in range(0, len(hex_serial), 2))
+  writer = csv.writer(csvfile,dialect='unix')
+  writer.writerow([out,valid_before.isoformat(),valid_after.isoformat(),subject.rfc4514_string()])
+  csvfile.close()
+
 # Write signed certificate to file
-with open("jnhmn.crt", "wb") as f:
-    f.write(certificate.public_bytes(serialization.Encoding.PEM))
+filename = "certs/" + hex_serial + ".crt"
+with open(filename, "wb") as f:
+  f.write(certificate.public_bytes(serialization.Encoding.PEM))
+print(filename)
