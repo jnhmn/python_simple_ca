@@ -97,7 +97,7 @@ def main(arg_data):
   builder = builder.add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
   builder = builder.add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_pub.public_key()), critical=False)
 
-  certificate = builder.sign(ca_priv,hashes.SHA256(),default_backend())
+  certificate = builder.sign(ca_priv,hashes.SHA512(),default_backend())
 
   # Update serial list
   with open("serials.txt", "a") as f:
@@ -119,9 +119,6 @@ def main(arg_data):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='issuecert')
-    #parser.add_argument('--group', '-g', action='append', default=[])
-    #parser.add_argument('--nomail', action='store_true')
-    #parser.add_argument('--noposix', action='store_true')
     parser.add_argument('csr', metavar='signing request', type=str, nargs=1, help='signing request')
     arg_data = parser.parse_args()
     print(arg_data)
