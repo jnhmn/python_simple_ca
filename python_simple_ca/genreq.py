@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from req_ext_helpers import *
+from python_simple_ca.req_ext_helpers import *
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes
@@ -102,7 +102,7 @@ def main(argdata):
       f.write(csr.public_bytes(serialization.Encoding.PEM))
 
 
-if __name__ == '__main__':
+def console_entry():
     parser = argparse.ArgumentParser(prog='issuecert')
     parser.add_argument('cn', metavar='common name', type=str, nargs='?', help='common name',)
     arg_data = parser.parse_args()
@@ -111,3 +111,6 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("\nAborted by user!")
         sys.exit()
+
+if __name__ == '__main__':
+    console_entry()
