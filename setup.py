@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-        name = 'python-simple-ca',
+        name = 'python_simple_ca',
         version = '0.0.1',
         license = 'GPL',
         description = 'Create CSR on the command line',
