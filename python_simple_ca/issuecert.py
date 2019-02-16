@@ -7,7 +7,7 @@ import argparse
 
 import getpass
 
-from ext_print import *
+from python_simple_ca.ext_print import *
 
 from cryptography import x509
 from cryptography.x509.oid import NameOID
@@ -127,7 +127,7 @@ def main(arg_data):
   print(filename)
 
 
-if __name__ == '__main__':
+def console_entry():
     parser = argparse.ArgumentParser(prog='issuecert')
     parser.add_argument('csr', metavar='signing request', type=str, nargs=1, help='signing request')
     arg_data = parser.parse_args()
@@ -137,3 +137,6 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("\nAborted by user!")
         sys.exit()
+
+if __name__ == '__main__':
+    console_entry()
