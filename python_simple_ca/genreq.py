@@ -43,6 +43,7 @@ def main(argdata):
   organization=config.get(cnf_section,'organization')
   ou=config.get(cnf_section,'ou',fallback='')
   san=config.get(cnf_section,'san',fallback='')
+  privpass=config.get(cnf_section,'passphrase',fallback='')
 
   subject = []
   alt_names = set()
@@ -123,10 +124,13 @@ def main(argdata):
   csr = gen_csr(key,subject,ext_list)
 
   with open(cn + ".key", "wb") as f:
+      enc_alg = serialization.NoEncryption()
+      if privpass:
+        enc_alg = serialization.BestAvailableEncryption(privpass.encode('UTF-8'))
       f.write(key.private_bytes(
           encoding=serialization.Encoding.PEM,
           format=serialization.PrivateFormat.TraditionalOpenSSL,
-          encryption_algorithm=serialization.BestAvailableEncryption(b"passphrase"),
+          encryption_algorithm=enc_alg,
       ))
 
   with open(cn + ".csr", "wb") as f:

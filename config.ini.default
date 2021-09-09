@@ -4,6 +4,7 @@ state=CA
 city=San Diego
 organization=Example Limited
 ou=Infrastructure,Internal Infrastructure
+passphrase=MyPassword
 
 [example.com]
 common_name=example.com
