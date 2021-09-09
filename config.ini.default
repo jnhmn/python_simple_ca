@@ -3,4 +3,8 @@ country=US
 state=CA
 city=San Diego
 organization=Example Limited
+ou=Infrastructure,Internal Infrastructure
+
+[example.com]
 common_name=example.com
+san=www.example.com,example.net

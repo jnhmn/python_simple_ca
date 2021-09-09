@@ -42,3 +42,8 @@ def gen_extended_key_usage():
   usages = []
   usages.append(ExtendedKeyUsageOID.SERVER_AUTH)
   return x509.ExtendedKeyUsage(usages)
+
+def split_multivalues(instr):
+  if len(instr) == 0:
+    return [];
+  return instr.split(',');
