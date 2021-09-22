@@ -105,7 +105,7 @@ def main(argdata):
   alt_names.add(cn)
   print("Leaving it empty continues")
   while True:
-    name = input("Alternatvie name: ")
+    name = input("Alternative name: ")
     if not name:
       break;
     if name == '.':
