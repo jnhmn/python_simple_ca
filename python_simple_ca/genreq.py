@@ -23,8 +23,13 @@ def gen_csr(key, subject, extensions):
   return csr
 
 def main(argdata):
-  config = configparser.ConfigParser(interpolation=None)
-  config.read('config.ini')
+  try:
+    config = configparser.ConfigParser(interpolation=None)
+    f = open('config.ini','r')
+    config.read_file(f)
+  except (configparser.ParsingError, FileNotFoundError):
+    print("Invalid config file: 'config.ini'" , file=sys.stderr)
+    sys.exit(1)
 
   if argdata.cn:
     if config.has_section(argdata.cn):
@@ -149,3 +154,5 @@ def console_entry():
 
 if __name__ == '__main__':
     console_entry()
+
+# vim: expandtab
