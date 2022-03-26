@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
         name = 'python_simple_ca',
-        version = '0.0.4',
+        version = '0.0.5',
         license = 'GPL',
         description = 'Create CSR on the command line',
         install_requires = ['cryptography'],
@@ -13,5 +13,7 @@ setup(
                 'genreq=python_simple_ca.genreq:console_entry',
                 'issuecert=python_simple_ca.issuecert:console_entry',
             ],
-        }
+        },
+				data_files=[
+				('', ['config.ini.default'])]
 )

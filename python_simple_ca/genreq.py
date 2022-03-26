@@ -49,6 +49,7 @@ def main(argdata):
   ou=config.get(cnf_section,'ou',fallback='')
   san=config.get(cnf_section,'san',fallback='')
   privpass=config.get(cnf_section,'passphrase',fallback='')
+  keysize=config.getint(cnf_section,'keysize',fallback=4096)
 
   subject = []
   alt_names = set()
@@ -120,7 +121,7 @@ def main(argdata):
     else:
       alt_names.add(name)
 
-  key = rsa.generate_private_key(public_exponent=65537,key_size=4096,backend=default_backend())
+  key = rsa.generate_private_key(public_exponent=65537,key_size=keysize,backend=default_backend())
   ext_list = []
   ext_list.append((gen_alt_name(alt_names), False))
   ext_list.append((gen_basic_key_usage(), False))

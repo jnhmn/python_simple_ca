@@ -5,6 +5,7 @@ city=San Diego
 organization=Example Limited
 ou=Infrastructure,Internal Infrastructure
 passphrase=MyPassword
+keysize=4096
 
 [example.com]
 common_name=example.com
