@@ -5,3 +5,9 @@ config.ini
 serials.txt
 certs.csv
 __pycache__
+bin/
+lib/
+lib64
+python_simple_ca.egg-info/
+pyvenv.cfg
+
