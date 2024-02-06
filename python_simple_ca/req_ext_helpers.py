@@ -38,6 +38,19 @@ def gen_basic_key_usage():
     encipher_only=False
   )
 
+def gen_ca_basic_key_usage():
+  return x509.KeyUsage(
+    content_commitment=False,
+    digital_signature=False,
+    key_encipherment=False,
+    data_encipherment=False,
+    key_agreement=False,
+    key_cert_sign=True,
+    crl_sign=True,
+    decipher_only=False,
+    encipher_only=False
+  )
+
 def gen_extended_key_usage():
   usages = []
   usages.append(ExtendedKeyUsageOID.SERVER_AUTH)
